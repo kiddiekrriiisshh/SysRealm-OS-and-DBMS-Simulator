@@ -1,0 +1,7 @@
+{
+  "server_url": "http://127.0.0.1:5000",
+  "pair_code": "SR-XXXX",
+  "interval_seconds": 2.0,
+  "max_processes": 50,
+  "enable_debug_logging": false
+}

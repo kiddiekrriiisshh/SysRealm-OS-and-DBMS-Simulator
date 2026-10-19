@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysRealm — 3D Cybernetic OS & DBMS Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --card-tilt-x: 0deg;
+            --card-tilt-y: 0deg;
+            --sheen-x: 50%;
+            --sheen-y: 50%;
+            --primary: #c87a3e;
+            --accent-caramel: #cb8d50;
+            --accent-amber: #c87a3e;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #e5dfd4;
+            --border-light: #eee8dd;
+            --border-glass: rgba(229, 223, 212, 0.18);
+            --accent-glow: rgba(34, 197, 94, 0.45);
+            --accent-color: #22c55e;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #030712;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            perspective: 1400px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D Deep Space Ambient Background Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.18;
+            pointer-events: none;
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        .o1 { width: 500px; height: 500px; background: #c87a3e; top: -140px; right: -120px; }
+        .o2 { width: 440px; height: 440px; background: #cb8d50; bottom: -120px; left: -100px; animation-delay: -5s; opacity: 0.14; }
+        .o3 { width: 320px; height: 320px; background: #22c55e; top: 35%; left: 20%; animation-delay: -9s; opacity: 0.12; }
+        @keyframes orbFloat {
+            0% { transform: translate3d(0, 0, -200px) scale(0.9); }
+            100% { transform: translate3d(40px, -30px, 0) scale(1.15); }
+        }
+
+        /* 3D Interactive Cyber-Grid & Polyhedron Canvas */
+        #os-3d-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 3D Stage Viewport */
+        #stage-3d {
+            position: relative;
+            z-index: 5;
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 24px;
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
+
+        /* Cockpit Deck: Left HUD, Center Login Card, Right HUD */
+        .cockpit-deck {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            width: 100%;
+            max-width: 1480px;
+        }
+
+        /* HUD Panels */
+        .os-hud-panel {
+            width: 320px;
+            max-width: calc(50vw - 260px);
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(229, 223, 212, 0.18);
+            border-radius: 18px;
+            padding: 16px 18px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 25px rgba(200, 122, 62, 0.05);
+            color: #94a3b8;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        }
+
+        .os-hud-left {
+            transform: none;
+        }
+        .os-hud-right {
+            transform: none;
+        }
+
+        @media (max-width: 1280px) {
+            .os-hud-panel {
+                width: 310px;
+                opacity: 0.9;
+            }
+        }
+        @media (max-width: 1060px) {
+            .os-hud-panel {
+                display: none;
+            }
+        }
+
+        .os-hud-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(229, 223, 212, 0.14);
+            padding-bottom: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+        .os-hud-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .os-hud-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Boot Terminal Log */
+        .os-boot-log {
+            height: 230px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 5px;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+        .boot-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            animation: bootLineIn 0.3s ease-out forwards;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        @keyframes bootLineIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .boot-badge-ok { color: #22c55e; font-weight: 700; flex-shrink: 0; }
+        .boot-badge-info { color: #cb8d50; font-weight: 700; flex-shrink: 0; }
+        .boot-time { color: #78716c; flex-shrink: 0; }
+        .boot-msg { color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; }
+
+        .os-boot-progress-wrap {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(229, 223, 212, 0.16);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .os-boot-progress-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .os-boot-bar {
+            height: 6px;
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .os-boot-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #c87a3e, #cb8d50, #22c55e);
+            border-radius: 99px;
+            transition: width 0.35s ease;
+            box-shadow: 0 0 10px rgba(200, 122, 62, 0.6);
+        }
+
+        /* Right HUD Subsystem telemetry */
+        .os-sub-box {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(229, 223, 212, 0.14);
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+        .os-sub-title {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #cbd5e1;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .os-state-pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .os-state-node {
+            flex: 1;
+            text-align: center;
+            padding: 6px 3px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+        .os-state-node.active-new { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.15); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        .os-state-node.active-ready { border-color: #cb8d50; color: #cb8d50; background: rgba(203, 141, 80, 0.15); box-shadow: 0 0 10px rgba(203, 141, 80, 0.3); }
+        .os-state-node.active-running { border-color: #22c55e; color: #4ade80; background: rgba(34, 197, 94, 0.18); box-shadow: 0 0 12px rgba(34, 197, 94, 0.4); }
+        .os-state-node.active-waiting { border-color: #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.15); }
+        .os-state-node.active-term { border-color: #64748b; color: #cbd5e1; background: rgba(100, 116, 139, 0.2); }
+
+        .os-mini-frames {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+        .os-mini-frame {
+            height: 15px;
+            border-radius: 3px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.75);
+            transition: all 0.35s ease;
+        }
+        .os-mini-frame.used-kernel { background: rgba(200, 122, 62, 0.4); border-color: #c87a3e; }
+        .os-mini-frame.used-dbms   { background: rgba(139, 92, 246, 0.4); border-color: #8b5cf6; }
+        .os-mini-frame.used-proc   { background: rgba(34, 197, 94, 0.4);  border-color: #22c55e; }
+        .os-mini-frame.used-cache  { background: rgba(6, 182, 212, 0.4);  border-color: #06b6d4; }
+
+        .os-core-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .os-core-item { font-size: 10px; color: #94a3b8; }
+        .os-core-bar {
+            height: 5px;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 3px;
+        }
+        .os-core-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #c87a3e, #22c55e);
+            border-radius: 99px;
+            transition: width 0.5s ease;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════════ */
+        /* 💎 SYSREALM LOGIN CARD (EDITORIAL THEME HARMONIZED WITH DASHBOARDS)         */
+        /* ═══════════════════════════════════════════════════════════════════════════ */
+        .card-3d-wrapper {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .card {
+            position: relative;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(28px);
+            border: 1.5px solid rgba(200, 122, 62, 0.35);
+            border-radius: 22px;
+            padding: 38px 36px;
+            width: 100%;
+            box-shadow: 
+                0 35px 85px rgba(0, 0, 0, 0.75),
+                0 0 45px var(--accent-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                inset 0 0 35px rgba(200, 122, 62, 0.05);
+            transform: none;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            overflow: visible;
+        }
+
+        .card-sheen {
+            display: none;
+        }
+
+        /* SysRealm Brand & Emblem Header */
+        .brand {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dash-emblem-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .dash-emblem-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: 1.5px solid #d4c2a5;
+            background: rgba(250, 248, 243, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(200, 122, 62, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .card:hover .dash-emblem-circle {
+            transform: scale(1.05);
+        }
+
+        .dash-emblem-inner {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px dashed rgba(200, 122, 62, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c87a3e;
+            font-size: 22px;
+        }
+
+        .dash-emblem-labels {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #a89f91;
+            text-align: center;
+            line-height: 1.5;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        .dash-emblem-lab {
+            color: #c87a3e;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+
+        .dash-kicker {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dash-kicker-dash {
+            color: #c87a3e;
+            font-weight: 900;
+            font-size: 15px;
+        }
+
+        .bn {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            color: #f8fafc;
+            margin-bottom: 4px;
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        .bt {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 12.5px;
+            color: #94a3b8;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        h2 {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            font-size: 19px;
+            color: #f8fafc;
+            text-align: center;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .sub {
+            font-family: 'Inter', system-ui, sans-serif;
+            text-align: center;
+            color: #64748b;
+            font-size: 12.5px;
+            margin-bottom: 20px;
+        }
+
+        /* Role Selector Cards */
+        .role-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .role-card {
+            border: 1.5px solid rgba(229, 223, 212, 0.18);
+            border-radius: 14px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(30, 41, 59, 0.55);
+            user-select: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .role-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(200, 122, 62, 0.45);
+            background: rgba(30, 41, 59, 0.8);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+        }
+        .role-card.selected-teacher {
+            border-color: #c87a3e;
+            background: rgba(200, 122, 62, 0.16);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 0 0 1px #c87a3e, 0 0 20px rgba(200, 122, 62, 0.35);
+            transform: translateY(-1px);
+        }
+        .role-card.selected-student {
+            border-color: #22c55e;
+            background: rgba(34, 197, 94, 0.14);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 0 0 1px #22c55e, 0 0 20px rgba(34, 197, 94, 0.35);
+            transform: translateY(-1px);
+        }
+        .role-icon {
+            font-size: 26px;
+            margin-bottom: 6px;
+            display: inline-block;
+            transition: transform 0.25s ease;
+        }
+        .role-card:hover .role-icon {
+            transform: scale(1.12);
+        }
+        .role-label {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+        .role-desc {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 3px;
+            line-height: 1.35;
+        }
+        .role-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 99px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        .pill-teacher {
+            background: rgba(200, 122, 62, 0.2);
+            color: #e5a772;
+            border: 1px solid rgba(200, 122, 62, 0.4);
+        }
+        .pill-student {
+            background: rgba(34, 197, 94, 0.18);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            border-radius: 12px;
+            padding: 11px 14px;
+            margin-bottom: 18px;
+            color: #fca5a5;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+        }
+
+        /* Form Controls */
+        form {
+            position: relative;
+            z-index: 10;
+        }
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 10;
+        }
+        label {
+            display: block;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 12.5px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .iw {
+            position: relative;
+        }
+        .iw i.icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #78716c;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            z-index: 3;
+            pointer-events: none;
+        }
+        input[type=email], input[type=password] {
+            width: 100%;
+            padding: 12px 42px 12px 42px;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1.5px solid rgba(229, 223, 212, 0.2);
+            border-radius: 12px;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 2;
+            cursor: text;
+        }
+        input[type=email]:focus, input[type=password]:focus {
+            border-color: var(--accent-color);
+            background: rgba(30, 41, 59, 0.98);
+            box-shadow: 0 0 0 3px var(--accent-glow), inset 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        input:focus + .icon, .iw:focus-within .icon {
+            color: var(--accent-color);
+        }
+        input::placeholder {
+            color: #64748b;
+            font-size: 13.5px;
+        }
+        .tpw {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #78716c;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 6px;
+            transition: color 0.2s ease;
+            z-index: 5;
+        }
+        .tpw:hover {
+            color: #cbd5e1;
+        }
+
+        /* Action Button */
+        .btn-in {
+            width: 100%;
+            padding: 13.5px 18px;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 6px;
+            letter-spacing: 0.02em;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-in:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.55);
+        }
+        .btn-in:active {
+            transform: translateY(1px);
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+        }
+        .btn-in.teacher-mode {
+            background: linear-gradient(135deg, #c87a3e, #cb8d50);
+            box-shadow: 0 10px 24px rgba(200, 122, 62, 0.45);
+        }
+        .btn-in.teacher-mode:hover {
+            box-shadow: 0 14px 30px rgba(200, 122, 62, 0.6);
+        }
+        .btn-in.student-mode {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.4);
+        }
+        .btn-in.student-mode:hover {
+            box-shadow: 0 14px 30px rgba(34, 197, 94, 0.55);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 16px;
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(229, 223, 212, 0.16);
+        }
+        .reg-link {
+            text-align: center;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .reg-link a {
+            color: #c87a3e;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .reg-link a:hover {
+            color: #cb8d50;
+            text-decoration: underline;
+        }
+
+        .card-ground-shadow {
+            position: absolute;
+            bottom: -35px;
+            left: 5%;
+            width: 90%;
+            height: 25px;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, transparent 75%);
+            filter: blur(10px);
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 28px 20px;
+                border-radius: 18px;
+            }
+            .bn {
+                font-size: 24px;
+            }
+            .role-row {
+                gap: 8px;
+            }
+            .role-card {
+                padding: 12px 6px;
+            }
+            .role-icon {
+                font-size: 22px;
+            }
+            .role-label {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+
+    <!-- 3D Perspective Cyber-Grid & Holographic Polyhedron Canvas -->
+    <canvas id="os-3d-canvas"></canvas>
+
+    <div id="stage-3d">
+        <div class="cockpit-deck">
+            <!-- Left 3D Panel: Kernel Boot Sequence (dmesg / init) -->
+            <div class="os-hud-panel os-hud-left" id="hud-left">
+                <div class="os-hud-header">
+                    <div class="os-hud-dots">
+                        <span style="background:#ef4444;"></span>
+                        <span style="background:#f59e0b;"></span>
+                        <span style="background:#22c55e;"></span>
+                    </div>
+                    <span>tty1 — sysrealm-kernel-boot.log</span>
+                    <span style="color:#22c55e;">● LIVE</span>
+                </div>
+
+                <div class="os-boot-log" id="os-boot-log"></div>
+
+                <div class="os-boot-progress-wrap">
+                    <div class="os-boot-progress-top">
+                        <span id="os-boot-stage-label">BOOTING KERNEL SUBSYSTEMS...</span>
+                        <span id="os-boot-pct">0%</span>
+                    </div>
+                    <div class="os-boot-bar">
+                        <div class="os-boot-bar-fill" id="os-boot-bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central 3D Volumetric Login Card -->
+            <div class="card-3d-wrapper" id="card-wrapper">
+                <div class="card" id="main-card">
+                    <div class="card-sheen" id="card-sheen"></div>
+                    <div class="card-ground-shadow"></div>
+
+                    <div class="brand">
+                        <div class="dash-emblem-wrap">
+                            <div class="dash-emblem-circle">
+                                <div class="dash-emblem-inner">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                            </div>
+                            <div class="dash-emblem-labels">
+                                <div>SYSREALM · v2.5</div>
+                                <div class="dash-emblem-lab">VIRTUAL OS LAB</div>
+                            </div>
+                        </div>
+                        <div class="dash-kicker">
+                            <span class="dash-kicker-dash">—</span>
+                            AUTHENTICATION GATEWAY
+                        </div>
+                        <h1 class="bn">SysRealm</h1>
+                        <p class="bt">Operating System &amp; Database Virtual Laboratory</p>
+                    </div>
+
+                    <h2>Sign In to Console</h2>
+                    <p class="sub">Select your account role to access your laboratory session</p>
+
+                    <!-- Role Selector -->
+                    <div class="role-row">
+                        <div class="role-card" id="card-teacher" onclick="selectRole('teacher')">
+                            <div class="role-icon">👨‍🏫</div>
+                            <div class="role-label">Teacher / Admin</div>
+                            <div class="role-desc">Manage class &amp; query labs</div>
+                            <span class="role-pill pill-teacher">Instructor</span>
+                        </div>
+                        <div class="role-card selected-student" id="card-student" onclick="selectRole('student')">
+                            <div class="role-icon">👨‍🎓</div>
+                            <div class="role-label">Student</div>
+                            <div class="role-desc">Interactive OS labs &amp; quests</div>
+                            <span class="role-pill pill-student">Student</span>
+                        </div>
+                    </div>
+
+                    {% if error %}
+                    <div class="error-box"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                    {% endif %}
+
+                    <form method="POST" action="/login" autocomplete="off" id="login-form" onsubmit="return handleLoginSubmit()">
+                        <input type="hidden" name="account_type" id="account-type-input" value="student">
+
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <div class="iw">
+                                <i class="fas fa-envelope icon"></i>
+                                <input type="email" id="email-input" name="email" placeholder="you@example.com"
+                                       value="" autocomplete="email" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="iw">
+                                <i class="fas fa-lock icon"></i>
+                                <input type="password" id="pw" name="password" placeholder="Enter password"
+                                       value="" autocomplete="current-password" required>
+                                <button type="button" class="tpw" onclick="togglePw()" aria-label="Toggle password view">
+                                    <i class="fas fa-eye" id="pw-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-in student-mode" id="btn-signin">
+                            <i class="fas fa-sign-in-alt" style="margin-right:8px;"></i>
+                            <span id="btn-label">Sign In as Student</span>
+                        </button>
+                    </form>
+
+                    <div class="divider">or</div>
+                    <div class="reg-link">
+                        Don't have an account? <a href="/register">Create one &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right 3D Panel: Live CPU Scheduler, Process States & 32-Frame MMU RAM -->
+            <div class="os-hud-panel os-hud-right" id="hud-right">
+                <div class="os-hud-header">
+                    <span><i class="fas fa-microchip" style="color:#c87a3e;margin-right:6px;"></i>KERNEL TELEMETRY</span>
+                    <span id="os-uptime-clock" style="color:#c87a3e;">UPTIME 00:00:00</span>
+                </div>
+
+                <!-- CPU Process Lifecycle State Machine -->
+                <div class="os-sub-box">
+                    <div class="os-sub-title">
+                        <span>CPU Scheduler Lifecycle</span>
+                        <span id="os-active-proc-pill" style="color:#4ade80;">PID 1 (init)</span>
+                    </div>
+                    <div class="os-state-pipeline">
+                        <div class="os-state-node" id="st-node-new">NEW</div>
+                        <div class="os-state-node" id="st-node-ready">READY</div>
+                        <div class="os-state-node active-running" id="st-node-run">RUNNING</div>
+                        <div class="os-state-node" id="st-node-wait">WAITING</div>
+                        <div class="os-state-node" id="st-node-term">TERM</div>
+                    </div>
+                    <div style="font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
+                        <span>Ready Queue: <strong id="os-rq-text" style="color:#cbd5e1;">[P1, P2, P3, P4]</strong></span>
+                        <span>Quantum: <strong style="color:#c87a3e;">2ms</strong></span>
+                    </div>
+                </div>
+
+                <!-- 32-Frame Physical RAM Paging Map -->
+                <div class="os-sub-box">
+                    <div class="os-sub-title">
+                        <span>MMU Physical RAM (32 Frames × 512MB)</span>
+                        <span id="os-ram-used-label" style="color:#e5a772;">12 / 32 Frames</span>
+                    </div>
+                    <div class="os-mini-frames" id="os-mini-frames"></div>
+                    <div style="display:flex;gap:10px;margin-top:7px;font-size:9.5px;color:#64748b;">
+                        <span><b style="color:#c87a3e;">■</b> Kernel</span>
+                        <span><b style="color:#8b5cf6;">■</b> InnoDB</span>
+                        <span><b style="color:#22c55e;">■</b> User Page</span>
+                        <span><b style="color:#06b6d4;">■</b> Page Cache</span>
+                    </div>
+                </div>
+
+                <!-- Multi-Core CPU Activity -->
+                <div class="os-sub-box">
+                    <div class="os-sub-title">
+                        <span>SMP Logical Cores</span>
+                        <span style="color:#22c55e;">ONLINE</span>
+                    </div>
+                    <div class="os-core-grid">
+                        <div class="os-core-item">
+                            <div style="display:flex;justify-content:space-between;"><span>Core 0 (sched)</span><span id="c0-val">42%</span></div>
+                            <div class="os-core-bar"><div class="os-core-fill" id="c0-bar" style="width:42%;"></div></div>
+                        </div>
+                        <div class="os-core-item">
+                            <div style="display:flex;justify-content:space-between;"><span>Core 1 (mmu)</span><span id="c1-val">28%</span></div>
+                            <div class="os-core-bar"><div class="os-core-fill" id="c1-bar" style="width:28%;"></div></div>
+                        </div>
+                        <div class="os-core-item">
+                            <div style="display:flex;justify-content:space-between;"><span>Core 2 (mysqld)</span><span id="c2-val">35%</span></div>
+                            <div class="os-core-bar"><div class="os-core-fill" id="c2-bar" style="width:35%;"></div></div>
+                        </div>
+                        <div class="os-core-item">
+                            <div style="display:flex;justify-content:space-between;"><span>Core 3 (worker)</span><span id="c3-val">19%</span></div>
+                            <div class="os-core-bar"><div class="os-core-fill" id="c3-bar" style="width:19%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Security & Credential Reset on Tab Reopen ──
+        sessionStorage.removeItem('sysrealm_tab_token');
+        sessionStorage.removeItem('sysrealm_quests');
+        sessionStorage.removeItem('sysrealm_student_xp');
+        localStorage.removeItem('sysrealm_quests');
+        localStorage.removeItem('sysrealm_student_xp');
+        var selectedRole = 'student';
+
+        function handleLoginSubmit() {
+            var em = document.getElementById('email-input');
+            var pw = document.getElementById('pw');
+            var btn = document.getElementById('btn-signin');
+            var lbl = document.getElementById('btn-label');
+            if (!em || !em.value.trim() || !pw || !pw.value) {
+                alert('Please enter both email and password.');
+                return false;
+            }
+            if (btn) {
+                btn.style.opacity = '0.85';
+                btn.style.pointerEvents = 'none';
+                if (lbl) lbl.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Signing In...';
+            }
+            return true;
+        }
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('account-type-input').value = role;
+
+            var tc = document.getElementById('card-teacher');
+            var sc = document.getElementById('card-student');
+            var btn = document.getElementById('btn-signin');
+            var lbl = document.getElementById('btn-label');
+            var root = document.documentElement;
+
+            tc.className = 'role-card' + (role === 'teacher' ? ' selected-teacher' : '');
+            sc.className = 'role-card' + (role === 'student' ? ' selected-student' : '');
+
+            if (role === 'teacher') {
+                btn.className = 'btn-in teacher-mode';
+                lbl.textContent = 'Sign In as Teacher';
+                root.style.setProperty('--accent-glow', 'rgba(200, 122, 62, 0.45)');
+                root.style.setProperty('--accent-color', '#c87a3e');
+            } else {
+                btn.className = 'btn-in student-mode';
+                lbl.textContent = 'Sign In as Student';
+                root.style.setProperty('--accent-glow', 'rgba(34, 197, 94, 0.45)');
+                root.style.setProperty('--accent-color', '#22c55e');
+            }
+        }
+
+        function togglePw() {
+            var inp = document.getElementById('pw');
+            var ico = document.getElementById('pw-icon');
+            if (inp.type === 'password') {
+                inp.type = 'text'; ico.className = 'fas fa-eye-slash';
+            } else {
+                inp.type = 'password'; ico.className = 'fas fa-eye';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // 🌌 TRUE 3D CANVAS PERSPECTIVE GRID & ROTATING HOLOGRAPHIC POLYHEDRON
+        // ═══════════════════════════════════════════════════════════════════════════
+        (function init3DWorldCanvas() {
+            var canvas = document.getElementById('os-3d-canvas');
+            if (!canvas || !canvas.getContext) return;
+            var ctx = canvas.getContext('2d');
+            var W = window.innerWidth, H = window.innerHeight;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            // 3D Polyhedron Definition (Holographic Kernel Core Icosahedron)
+            var phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
+            var rawVertices = [
+                [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
+                [0, -1,  phi], [0,  1,  phi], [0, -1, -phi], [0,  1, -phi],
+                [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1]
+            ];
+            // Normalize & Scale
+            var polyScale = 65;
+            var vertices = rawVertices.map(function(v) {
+                var len = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+                return [v[0]/len * polyScale, v[1]/len * polyScale, v[2]/len * polyScale];
+            });
+
+            // Edges connecting vertices
+            var edges = [];
+            for (var i = 0; i < vertices.length; i++) {
+                for (var j = i + 1; j < vertices.length; j++) {
+                    var d2 = Math.pow(vertices[i][0] - vertices[j][0], 2) +
+                             Math.pow(vertices[i][1] - vertices[j][1], 2) +
+                             Math.pow(vertices[i][2] - vertices[j][2], 2);
+                    if (d2 < Math.pow(polyScale * 1.15, 2)) {
+                        edges.push([i, j]);
+                    }
+                }
+            }
+
+            // 3D Orbiting Data Satellites
+            var satellites = [];
+            var satLabels = ['KERNEL::RING0', 'MMU::PTE', 'DBMS::ACID', 'CBO::COST', 'SCHED::RR', 'IRQ::0x80', 'TLB::HIT'];
+            for (var s = 0; s < 7; s++) {
+                satellites.push({
+                    radius: 170 + s * 18,
+                    speed: 0.008 + s * 0.003,
+                    angle: (s * Math.PI * 2) / 7,
+                    inclination: 0.35 + (s * 0.18),
+                    label: satLabels[s],
+                    color: ['#c87a3e', '#22c55e', '#cb8d50', '#f59e0b', '#38bdf8', '#8b5cf6', '#22c55e'][s]
+                });
+            }
+
+            // 3D Floating Spatial Stars
+            var stars3D = [];
+            for (var st = 0; st < 90; st++) {
+                stars3D.push({
+                    x: (Math.random() - 0.5) * 1600,
+                    y: (Math.random() - 0.5) * 1200,
+                    z: Math.random() * 800 + 50,
+                    color: Math.random() > 0.4 ? '#c87a3e' : '#38bdf8',
+                    size: Math.random() * 1.6 + 0.8
+                });
+            }
+
+            var rotX = 0.2;
+            var rotY = 0;
+            var rotZ = 0;
+            var gridOffset = 0;
+
+            function render3DScene() {
+                ctx.clearRect(0, 0, W, H);
+                var cx = W / 2;
+                var cy = H / 2;
+                var focalLength = 480;
+
+                // ── 1. Infinite Receding 3D Perspective Cyber-Grid Floor ──
+                var horizonY = H * 0.62;
+                gridOffset = (gridOffset + 1.2) % 36;
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(200, 122, 62, 0.1)';
+                ctx.lineWidth = 1;
+
+                // Vanishing Perspective Lines
+                var numLines = 24;
+                for (var l = -numLines; l <= numLines; l++) {
+                    var groundX = cx + l * 85;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, horizonY);
+                    ctx.lineTo(groundX, H);
+                    ctx.stroke();
+                }
+
+                // Horizontal Receding Grid Lines
+                for (var z = 20; z < 450; z += 24) {
+                    var adjustedZ = (z + gridOffset) % 430 + 10;
+                    var py = horizonY + (focalLength / adjustedZ) * 65;
+                    if (py <= H) {
+                        var alpha = Math.min(0.2, (py - horizonY) / (H - horizonY) * 0.22);
+                        ctx.strokeStyle = 'rgba(200, 122, 62, ' + alpha + ')';
+                        ctx.beginPath();
+                        ctx.moveTo(0, py);
+                        ctx.lineTo(W, py);
+                        ctx.stroke();
+                    }
+                }
+                ctx.restore();
+
+                // ── 2. 3D Floating Spatial Stars with Z-Perspective ──
+                for (var s = 0; s < stars3D.length; s++) {
+                    var star = stars3D[s];
+                    star.z -= 0.6;
+                    if (star.z <= 10) star.z = 800;
+
+                    var k = focalLength / star.z;
+                    var px = star.x * k + cx;
+                    var py = star.y * k + cy - 40;
+
+                    if (px >= 0 && px <= W && py >= 0 && py <= H) {
+                        var sz = Math.max(0.5, (1 - star.z / 800) * star.size * 2);
+                        ctx.fillStyle = star.color;
+                        ctx.beginPath();
+                        ctx.arc(px, py, sz, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // ── 3. 3D Rotating Polyhedron (Kernel Core) ──
+                rotX += 0.007;
+                rotY += 0.011;
+                rotZ += 0.004;
+
+                var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+                var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+                var cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
+
+                // Project 3D Vertices
+                var projVerts = vertices.map(function(v) {
+                    var x1 = v[0] * cosY + v[2] * sinY;
+                    var y1 = v[1];
+                    var z1 = -v[0] * sinY + v[2] * cosY;
+
+                    var x2 = x1;
+                    var y2 = y1 * cosX - z1 * sinX;
+                    var z2 = y1 * sinX + z1 * cosX;
+
+                    var x3 = x2 * cosZ - y2 * sinZ;
+                    var y3 = x2 * sinZ + y2 * cosZ;
+                    var z3 = z2;
+
+                    var zDist = 580;
+                    var scale = focalLength / (z3 + zDist);
+                    return {
+                        x: x3 * scale + cx,
+                        y: y3 * scale + cy - 140,
+                        z: z3,
+                        scale: scale
+                    };
+                });
+
+                // Draw Edges
+                ctx.save();
+                ctx.lineWidth = 1.4;
+                for (var e = 0; e < edges.length; e++) {
+                    var p1 = projVerts[edges[e][0]];
+                    var p2 = projVerts[edges[e][1]];
+                    var avgZ = (p1.z + p2.z) / 2;
+                    var edgeAlpha = Math.max(0.12, (avgZ + polyScale) / (polyScale * 2) * 0.45);
+
+                    ctx.strokeStyle = selectedRole === 'teacher' 
+                        ? 'rgba(200, 122, 62, ' + edgeAlpha + ')' 
+                        : 'rgba(34, 197, 94, ' + edgeAlpha + ')';
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+
+                // Draw Vertices
+                for (var v = 0; v < projVerts.length; v++) {
+                    var pt = projVerts[v];
+                    ctx.fillStyle = selectedRole === 'teacher' ? '#c87a3e' : '#22c55e';
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = selectedRole === 'teacher' ? '#c87a3e' : '#10b981';
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, Math.max(1.5, 3.2 * pt.scale), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // ── 4. 3D Satellites Orbiting Kernel Core ──
+                ctx.font = '9px monospace';
+                for (var k = 0; k < satellites.length; k++) {
+                    var sat = satellites[k];
+                    sat.angle += sat.speed;
+
+                    var sx = Math.cos(sat.angle) * sat.radius;
+                    var sy = Math.sin(sat.angle) * sat.radius * Math.sin(sat.inclination);
+                    var sz = Math.sin(sat.angle) * sat.radius * Math.cos(sat.inclination);
+
+                    var sScale = focalLength / (sz + 580);
+                    var spx = sx * sScale + cx;
+                    var spy = sy * sScale + cy - 140;
+
+                    ctx.fillStyle = sat.color;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = sat.color;
+                    ctx.beginPath();
+                    ctx.arc(spx, spy, Math.max(1.5, 3 * sScale), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = 'rgba(203, 213, 225, 0.65)';
+                    ctx.fillText(sat.label, spx + 6, spy - 2);
+                }
+
+                requestAnimationFrame(render3DScene);
+            }
+            render3DScene();
+        })();
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // ⚡ LIVE OS KERNEL BOOT & TELEMETRY DAEMON SIMULATION
+        // ═══════════════════════════════════════════════════════════════════════════
+        (function initOSBootBackground() {
+            var bootSteps = [
+                { badge: 'INFO', time: '0.000000', msg: 'SysRealm 3D Kernel v2.5.0-x86_64 booting...', pct: 8,  stage: 'BIOS / UEFI POST CHECK' },
+                { badge: 'OK',   time: '0.084120', msg: 'Detected 16384 MB Physical RAM (32 Frames × 512 MB)', pct: 18, stage: 'PROBING PHYSICAL MEMORY' },
+                { badge: 'OK',   time: '0.192450', msg: 'MMU Page Table Base Register (PTBR) initialized @ 0x0040', pct: 30, stage: 'INITIALIZING MMU & PAGING' },
+                { badge: 'OK',   time: '0.310880', msg: 'Enabling Demand Paging (FIFO | LRU | Optimal engines)', pct: 42, stage: 'LOADING PAGE REPLACEMENT' },
+                { badge: 'OK',   time: '0.449120', msg: 'Starting CPU Scheduler (FCFS, SJF, Priority, RR Q=2ms)', pct: 56, stage: 'STARTING CPU SCHEDULER' },
+                { badge: 'OK',   time: '0.583910', msg: 'Mounting Hardware Resources: PRINTER[1] DISK[2] NET[1] IO[2]', pct: 68, stage: 'MOUNTING I/O DEVICES' },
+                { badge: 'OK',   time: '0.712040', msg: 'Core Services & Background Worker daemons online', pct: 80, stage: 'STARTING SYSTEM DAEMONS' },
+                { badge: 'OK',   time: '0.864300', msg: 'MySQL InnoDB Buffer Pool & ACID Transaction Log mounted', pct: 92, stage: 'CONNECTING DBMS ENGINE' },
+                { badge: 'OK',   time: '1.002410', msg: 'Spawning /sbin/init (PID 1) — 3D Cyber Terminal Ready', pct: 100, stage: 'KERNEL ONLINE — AWAITING AUTH' }
+            ];
+
+            var liveDaemonLogs = [
+                { badge: 'INFO', msg: 'sched_rr: Context switch PID 14 (mmu_paged) → PID 28 (mysqld)' },
+                { badge: 'OK',   msg: 'mmu_translate: Logical 2500MB → Frame 5 + Offset 452MB (HIT)' },
+                { badge: 'OK',   msg: 'scheduler_guard: Multi-queue ready check verified' },
+                { badge: 'INFO', msg: 'innodb_sync: Flushed 4 dirty pages to /dev/nvme0n1p2' },
+                { badge: 'OK',   msg: 'page_fault_handler: Demand page 0x07 loaded into Frame 11 (LRU)' },
+                { badge: 'INFO', msg: 'cbo_optimizer: Rule pushdown_predicates cost 48.2 → 6.1 (HIT)' }
+            ];
+
+            var logEl = document.getElementById('os-boot-log');
+            var pctEl = document.getElementById('os-boot-pct');
+            var fillEl = document.getElementById('os-boot-bar-fill');
+            var stageEl = document.getElementById('os-boot-stage-label');
+            var stepIdx = 0;
+            var daemonIdx = 0;
+            var simClock = 1.15;
+
+            function appendBootLine(badge, timeStr, msg) {
+                if (!logEl) return;
+                var row = document.createElement('div');
+                row.className = 'boot-line';
+                var badgeClass = badge === 'OK' ? 'boot-badge-ok' : 'boot-badge-info';
+                var badgeText  = badge === 'OK' ? '[  OK  ]' : '[ INFO ]';
+                row.innerHTML =
+                    '<span class="' + badgeClass + '">' + badgeText + '</span>' +
+                    '<span class="boot-time">[' + timeStr.padStart(8, ' ') + ']</span>' +
+                    '<span class="boot-msg">' + msg + '</span>';
+                logEl.appendChild(row);
+                while (logEl.children.length > 10) {
+                    logEl.removeChild(logEl.firstChild);
+                }
+            }
+
+            function runBootSequence() {
+                if (stepIdx < bootSteps.length) {
+                    var s = bootSteps[stepIdx++];
+                    appendBootLine(s.badge, s.time, s.msg);
+                    if (pctEl) pctEl.textContent = s.pct + '%';
+                    if (fillEl) fillEl.style.width = s.pct + '%';
+                    if (stageEl) stageEl.textContent = s.stage;
+                    setTimeout(runBootSequence, 520);
+                } else {
+                    setInterval(function() {
+                        var d = liveDaemonLogs[daemonIdx % liveDaemonLogs.length];
+                        daemonIdx++;
+                        simClock += (Math.random() * 0.45 + 0.25);
+                        appendBootLine(d.badge, simClock.toFixed(6), d.msg);
+                    }, 2200);
+                }
+            }
+            setTimeout(runBootSequence, 200);
+
+            // 32-Frame Physical RAM Mini-Grid
+            var framesContainer = document.getElementById('os-mini-frames');
+            var ramUsedLabel = document.getElementById('os-ram-used-label');
+            if (framesContainer) {
+                for (var i = 0; i < 32; i++) {
+                    var cell = document.createElement('div');
+                    cell.className = 'os-mini-frame';
+                    cell.id = 'login-frame-' + i;
+                    cell.textContent = 'F' + i;
+                    framesContainer.appendChild(cell);
+                }
+            }
+
+            function refreshMiniFrames() {
+                var usedCount = 0;
+                for (var i = 0; i < 32; i++) {
+                    var el = document.getElementById('login-frame-' + i);
+                    if (!el) continue;
+                    var cls = '';
+                    if (i < 4) cls = 'used-kernel';
+                    else if (i >= 4 && i < 8) cls = 'used-dbms';
+                    else {
+                        var r = Math.random();
+                        if (r < 0.24) cls = 'used-proc';
+                        else if (r < 0.38) cls = 'used-cache';
+                    }
+                    el.className = 'os-mini-frame' + (cls ? ' ' + cls : '');
+                    if (cls) usedCount++;
+                }
+                if (ramUsedLabel) ramUsedLabel.textContent = usedCount + ' / 32 Frames';
+            }
+            refreshMiniFrames();
+            setInterval(refreshMiniFrames, 1600);
+
+            // CPU Process Lifecycle State Machine & Cores
+            var states = [
+                { id: 'st-node-new',   cls: 'active-new',     proc: 'PID 48 (fork_worker)', rq: '[P14, P28, P42, P48]' },
+                { id: 'st-node-ready', cls: 'active-ready',   proc: 'PID 14 (mmu_paged)',   rq: '[P28, P42, P14]' },
+                { id: 'st-node-run',   cls: 'active-running', proc: 'PID 28 (mysqld)',      rq: '[P42, P1, P14]' },
+                { id: 'st-node-wait',  cls: 'active-waiting', proc: 'PID 42 (io_flush)',    rq: '[P1, P14, P28]' },
+                { id: 'st-node-run',   cls: 'active-running', proc: 'PID 1 (init_daemon)',  rq: '[P14, P28]' },
+                { id: 'st-node-term',  cls: 'active-term',    proc: 'PID 48 (exit 0)',      rq: '[P1, P14, P28]' }
+            ];
+            var stIdx = 0;
+            setInterval(function() {
+                var nodes = ['st-node-new', 'st-node-ready', 'st-node-run', 'st-node-wait', 'st-node-term'];
+                nodes.forEach(function(nid) {
+                    var n = document.getElementById(nid);
+                    if (n) n.className = 'os-state-node';
+                });
+                var cur = states[stIdx % states.length];
+                stIdx++;
+                var activeEl = document.getElementById(cur.id);
+                if (activeEl) activeEl.className = 'os-state-node ' + cur.cls;
+                var pill = document.getElementById('os-active-proc-pill');
+                if (pill) pill.textContent = cur.proc;
+                var rq = document.getElementById('os-rq-text');
+                if (rq) rq.textContent = cur.rq;
+
+                for (var c = 0; c < 4; c++) {
+                    var load = Math.floor(18 + Math.random() * 68);
+                    var vEl = document.getElementById('c' + c + '-val');
+                    var bEl = document.getElementById('c' + c + '-bar');
+                    if (vEl) vEl.textContent = load + '%';
+                    if (bEl) bEl.style.width = load + '%';
+                }
+            }, 1350);
+
+            // Uptime Clock
+            var upSec = 0;
+            setInterval(function() {
+                upSec++;
+                var hh = String(Math.floor(upSec / 3600)).padStart(2, '0');
+                var mm = String(Math.floor((upSec % 3600) / 60)).padStart(2, '0');
+                var ss = String(upSec % 60).padStart(2, '0');
+                var clk = document.getElementById('os-uptime-clock');
+                if (clk) clk.textContent = 'UPTIME ' + hh + ':' + mm + ':' + ss;
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>
